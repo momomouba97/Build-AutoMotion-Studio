@@ -1,0 +1,108 @@
+name: Build AutoMotion Studio
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "App version (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+      runner:
+        description: "Build machine (macos-15-intel = native Intel; macos-14 = Apple Silicon cross-build to x86_64)"
+        type: choice
+        default: macos-15-intel
+        options:
+          - macos-15-intel
+          - macos-14
+      ffmpeg_source:
+        description: "FFmpeg: prebuilt (fast) or build from source with macOS 11 target (slow, Intel runner only)"
+        type: choice
+        default: prebuilt
+        options:
+          - prebuilt
+          - build
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build macOS Intel DMG
+    runs-on: ${{ github.event.inputs.runner || 'macos-15-intel' }}
+    timeout-minutes: 120
+    env:
+      APP_VERSION: ${{ github.event.inputs.version || '1.0.0' }}
+      FFMPEG_SOURCE: ${{ github.event.inputs.ffmpeg_source || 'prebuilt' }}
+      TARGET_ARCH: x64
+      TARGET_PLATFORM: darwin
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - name: "[1/9] Checkout"
+        uses: actions/checkout@v4
+
+      - name: "[2/9] Environment info"
+        run: |
+          echo "Runner: $RUNNER_OS / $(uname -m) / macOS $(sw_vers -productVersion)"
+          echo "Version: $APP_VERSION | FFmpeg: $FFMPEG_SOURCE | Target: darwin-$TARGET_ARCH, deployment target $MACOSX_DEPLOYMENT_TARGET"
+          xcodebuild -version || true
+
+      - name: "[3/9] Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: "[4/9] Install dependencies"
+        run: bash scripts/install_dependencies.sh
+
+      - name: "[5/9] Prepare FFmpeg / FFprobe"
+        run: |
+          if [ "$FFMPEG_SOURCE" = "build" ]; then
+            bash scripts/build_ffmpeg.sh   # writes resources/bin/ffmpeg and ffprobe directly
+          else
+            node scripts/prepare_binaries.js
+          fi
+          ls -lh resources/bin
+          file resources/bin/ffmpeg resources/bin/ffprobe
+
+      - name: "[6/9] Unit tests (analysis, auto-edit, timeline)"
+        continue-on-error: true   # developer checks: a failure is reported but does not block the DMG build
+        run: node --test --test-reporter=spec tests/analyzer.test.js tests/timeline.test.js tests/config.test.js
+
+      - name: "[7/9] Build app bundle (Intel x86_64)"
+        run: bash scripts/build_macos.sh
+
+      - name: "[8/9] Create DMG"
+        run: bash scripts/package_dmg.sh
+
+      - name: "[9/9] Verify DMG (contents, x86_64, macOS target)"
+        run: bash scripts/verify_build.sh
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoMotion-Studio-Intel-DMG
+          path: dist/AutoMotion-Studio-Intel.dmg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-debug-info
+          path: |
+            dist/**/builder-*.yaml
+            dist/**/*.log
+            ~/Library/Logs/DiagnosticReports/*
+          if-no-files-found: ignore
+          retention-days: 7
