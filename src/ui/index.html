@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoMotion Studio</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data: blob:; media-src file: blob:; style-src 'self' file: 'unsafe-inline'; script-src 'self' file:">
+<link rel="stylesheet" href="../../assets/themes/dark.css">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">AutoMotion <b>Studio</b></div>
+    <input id="projname" type="text" value="Untitled" aria-label="Project name">
+    <button id="b-open" class="ghost" title="Open project (⌘O)">Open</button>
+    <button id="b-save" class="ghost" title="Save (⌘S)">Save</button>
+    <button id="b-undo" class="ghost" title="Undo (⌘Z)">Undo</button>
+    <button id="b-redo" class="ghost" title="Redo (⇧⌘Z)">Redo</button>
+    <span class="spacer"></span>
+    <button id="b-auto" class="primary">AUTO EDIT</button>
+    <button id="b-var" class="accent">CREATE NEW VARIATION</button>
+    <button id="b-regen">REGENERATE CLIP</button>
+    <button id="b-fast" class="accent">FAST EXPORT</button>
+  </header>
+
+  <aside id="library">
+    <div class="tabs" id="lib-tabs">
+      <button data-k="moving" class="on">Moving</button>
+      <button data-k="parked">Parked</button>
+      <button data-k="music">Music</button>
+    </div>
+    <div class="lib-tools">
+      <button id="b-import" class="primary">Import…</button>
+      <select id="lib-filter" aria-label="Filter">
+        <option value="all">All</option><option value="fav">Favorites</option><option value="excl">Excluded</option>
+      </select>
+    </div>
+    <div id="lib-list"></div>
+  </aside>
+
+  <main id="preview">
+    <div class="stage" id="stage">
+      <div id="frame">
+        <video id="vA" muted playsinline preload="auto"></video>
+        <video id="vB" muted playsinline preload="auto" class="hidden"></video>
+        <div id="osd">00:00:00</div>
+      </div>
+    </div>
+    <div class="transport">
+      <button id="b-play" class="primary" style="width:64px">Play</button>
+      <button id="b-stepb" class="ghost" title="Previous frame (←)">◀︎</button>
+      <button id="b-stepf" class="ghost" title="Next frame (→)">▶︎</button>
+      <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Scrub">
+      <span id="tc">0:00.00 / 0:00.00</span>
+      <select id="pq" title="Preview quality"><option value="proxy">Proxy preview</option><option value="original">Original</option></select>
+      <button id="b-full" class="ghost">Fullscreen</button>
+    </div>
+  </main>
+
+  <aside id="inspector">
+    <div class="itabs" id="itabs">
+      <button data-p="auto" class="on">Auto Edit</button>
+      <button data-p="clip">Clip</button>
+      <button data-p="export">Export</button>
+    </div>
+
+    <section class="ipane on" id="p-auto">
+      <div class="row"><label>Music</label><select id="s-music"></select></div>
+      <div class="row"><label>Cut every</label>
+        <select id="s-cut">
+          <option value="auto">Auto (energy)</option><option value="1beat">1 Beat</option><option value="2beats">2 Beats</option>
+          <option value="1bar">1 Bar</option><option value="2bars">2 Bars</option><option value="4bars">4 Bars</option>
+        </select></div>
+      <div class="row"><label>Parked share</label><input id="s-parked" type="range" min="0" max="60" value="22"><span id="s-parked-v">22%</span></div>
+      <div class="row"><label>Seed</label><input id="s-seed" type="number" min="1" max="999999"></div>
+      <div class="stat" id="an-stat"><span>BPM</span><b id="an-bpm">–</b><span>Bars</span><b id="an-bars">–</b><span>Kicks / Snares</span><b id="an-ks">–</b><span>Drops</span><b id="an-drops">–</b><span>Breakdowns</span><b id="an-bd">–</b><span>Clips on V1</span><b id="an-clips">–</b></div>
+      <div class="log" id="auto-log"></div>
+    </section>
+
+    <section class="ipane" id="p-clip">
+      <div id="clip-none" class="empty">Select a clip on the timeline.</div>
+      <div id="clip-form" style="display:none">
+        <div class="row"><label>Source</label><span id="c-name" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></div>
+        <div class="row"><label>Track</label><span id="c-track"></span></div>
+        <div class="row"><label>Start (s)</label><input id="c-start" type="number" step="0.001"></div>
+        <div class="row"><label>Duration (s)</label><input id="c-dur" type="number" step="0.001"></div>
+        <div class="row"><label>Source in (s)</label><input id="c-in" type="number" step="0.001"></div>
+        <div class="row"><label>Speed</label><input id="c-speed" type="number" step="0.05" min="0.25" max="4"></div>
+        <div class="row" id="c-gain-row"><label>Gain</label><input id="c-gain" type="number" step="0.05" min="0" max="2"></div>
+        <div id="c-video-only">
+          <div class="grp">Crop (% of source)</div>
+          <div class="row"><label>X / Y</label><input id="cr-x" type="number" min="0" max="95" step="1"><input id="cr-y" type="number" min="0" max="95" step="1"></div>
+          <div class="row"><label>W / H</label><input id="cr-w" type="number" min="5" max="100" step="1"><input id="cr-h" type="number" min="5" max="100" step="1"></div>
+          <div class="btnrow"><button id="cr-apply">Apply crop</button><button id="cr-center">Center 9:16</button><button id="cr-reset">Reset</button></div>
+        </div>
+        <div class="btnrow"><button id="c-apply" class="primary">Apply</button><button id="c-regen">Regenerate</button><button id="c-replace">Replace with library selection</button></div>
+      </div>
+    </section>
+
+    <section class="ipane" id="p-export">
+      <div class="row"><label>Container</label><select id="x-container"><option value="mp4">MP4</option><option value="mov">MOV</option></select></div>
+      <div class="row"><label>Codec</label><select id="x-codec"><option value="h264">H.264</option><option value="h265">H.265 (HEVC)</option></select></div>
+      <div class="row"><label>Resolution</label><select id="x-res"><option value="720">720p</option><option value="1080" selected>1080p</option><option value="1440">1440p</option><option value="2160">4K (2160p)</option></select></div>
+      <div class="row"><label>Aspect</label><select id="x-aspect"><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
+      <div class="row"><label>Frame rate</label><select id="x-fps"><option>24</option><option>25</option><option selected>30</option><option>60</option></select></div>
+      <div class="row"><label>Mode</label><select id="x-mode"><option value="fast">Fast</option><option value="balanced" selected>Balanced</option><option value="max">Maximum Quality</option></select></div>
+      <div class="row"><label>Hardware</label><select id="x-hw"><option value="auto">Auto (VideoToolbox)</option><option value="off">Software only</option></select></div>
+      <div class="row"><label>Audio fade-out</label><input id="x-fade" type="number" min="0" max="10" step="0.5" value="1"></div>
+      <div class="btnrow"><button id="x-go" class="primary">Export video…</button><button id="x-cancel" disabled>Cancel</button><button id="x-reveal" disabled>Show in Finder</button></div>
+      <div class="bar"><i id="x-bar"></i></div>
+      <div class="row" style="margin-top:6px"><span id="x-status" style="color:var(--dim)">Idle</span></div>
+      <div class="log" id="x-log"></div>
+      <div class="log" id="x-enc"></div>
+    </section>
+  </aside>
+
+  <section id="timeline">
+    <div class="tl-tools">
+      <button id="t-split" title="Split at playhead (S)">Split</button>
+      <button id="t-trimin" title="Trim start to playhead ([)">Trim ◂</button>
+      <button id="t-trimout" title="Trim end to playhead (])">Trim ▸</button>
+      <button id="t-del" title="Delete (⌫)">Delete</button>
+      <button id="t-ripple" title="Ripple delete (⇧⌫)">Ripple Delete</button>
+      <button id="t-dup" title="Duplicate (⌘D)">Duplicate</button>
+      <button id="t-replace">Replace Clip</button>
+      <button id="t-crop">Crop</button>
+      <span class="sep"></span>
+      <button id="t-snap" class="active" title="Snap to beats and clip edges">Snap to Beat</button>
+      <span class="sep"></span>
+      <span style="color:var(--dim)">Zoom</span><input id="t-zoom" type="range" min="2" max="300" value="60" aria-label="Zoom">
+      <span class="sep"></span>
+      <span id="t-info" style="color:var(--dim)"></span>
+    </div>
+    <div id="tl-body">
+      <div id="tl-corner"></div>
+      <div id="ruler-wrap"><canvas id="ruler"></canvas></div>
+      <div id="labels"></div>
+      <div id="lanes-wrap"><div id="lanes"></div></div>
+      <canvas id="beatlines"></canvas>
+      <div id="playhead"></div>
+    </div>
+  </section>
+</div>
+<div id="toast"></div>
+<div id="modal"><div class="box"><div id="modal-body"></div><button id="modal-close">Close</button></div></div>
+<div id="busy"><div id="busy-msg">Working…</div></div>
+
+<script src="../timeline/model.js"></script>
+<script src="../timeline/compile.js"></script>
+<script src="../timeline/autoedit.js"></script>
+<script src="state.js"></script>
+<script src="library.js"></script>
+<script src="player.js"></script>
+<script src="timeline_ui.js"></script>
+<script src="inspector.js"></script>
+<script src="project_io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{
+  "name": "automotion-studio",
+  "productName": "AutoMotion Studio",
+  "version": "1.0.0",
+  "description": "Automatic music-synced video editing for car footage (macOS Intel).",
+  "main": "src/main/main.js",
+  "author": "AutoMotion Studio",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron . ",
+    "prepare-binaries": "node scripts/prepare_binaries.js",
+    "test": "node --test tests/*.test.js",
+    "smoke": "electron . --smoke-test"
+  },
+  "devDependencies": {
+    "electron": "30.5.1",
+    "electron-builder": "24.13.3",
+    "ffmpeg-static": "5.2.0",
+    "ffprobe-static": "3.1.0"
+  },
+  "build": {
+    "appId": "com.automotion.studio",
+    "productName": "AutoMotion Studio",
+    "asar": false,
+    "npmRebuild": false,
+    "directories": { "output": "dist" },
+    "files": [
+      "package.json",
+      "src/**/*",
+      "assets/**/*",
+      "config/**/*",
+      "resources/presets/**/*"
+    ],
+    "extraResources": [
+      { "from": "resources/bin", "to": "bin", "filter": ["ffmpeg", "ffprobe"] }
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "target": [{ "target": "dir", "arch": ["x64"] }],
+      "minimumSystemVersion": "11.0",
+      "icon": "assets/icons/icon.png",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "darkModeSupport": true,
+      "extendInfo": {
+        "NSHighResolutionCapable": true,
+        "NSRequiresAquaSystemAppearance": false
+      }
+    }
+  }
+}

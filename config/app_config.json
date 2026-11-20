@@ -1,0 +1,15 @@
+{
+  "appName": "AutoMotion Studio",
+  "defaultFps": 30,
+  "analysisSampleRate": 22050,
+  "thumbnailWidth": 320,
+  "proxyHeight": 480,
+  "cacheMaxMB": 6000,
+  "segmentCacheMaxMB": 4000,
+  "videoExtensions": ["mp4", "mov", "m4v", "mkv", "avi", "webm", "mts", "m2ts", "mpg", "mpeg"],
+  "audioExtensions": ["mp3", "wav", "m4a", "aac", "flac", "ogg", "aif", "aiff", "opus"],
+  "probeConcurrency": 4,
+  "thumbConcurrency": 2,
+  "proxyConcurrency": 1,
+  "undoLimit": 100
+}

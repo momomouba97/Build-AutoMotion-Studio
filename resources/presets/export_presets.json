@@ -1,0 +1,31 @@
+{
+  "modes": {
+    "fast": {
+      "label": "Fast",
+      "x264": { "preset": "ultrafast", "crf": 26 },
+      "x265": { "preset": "ultrafast", "crf": 30 },
+      "vtBitsPerPixel": 0.06,
+      "scaleFlags": "fast_bilinear",
+      "audioBitrate": "160k"
+    },
+    "balanced": {
+      "label": "Balanced",
+      "x264": { "preset": "veryfast", "crf": 21 },
+      "x265": { "preset": "superfast", "crf": 26 },
+      "vtBitsPerPixel": 0.10,
+      "scaleFlags": "bilinear",
+      "audioBitrate": "192k"
+    },
+    "max": {
+      "label": "Maximum Quality",
+      "x264": { "preset": "slow", "crf": 16 },
+      "x265": { "preset": "medium", "crf": 20 },
+      "vtBitsPerPixel": 0.18,
+      "scaleFlags": "bicubic",
+      "audioBitrate": "256k"
+    }
+  },
+  "resolutions": { "720": 720, "1080": 1080, "1440": 1440, "2160": 2160 },
+  "fps": [24, 25, 30, 60],
+  "aspects": { "16:9": [16, 9], "9:16": [9, 16], "1:1": [1, 1] }
+}
